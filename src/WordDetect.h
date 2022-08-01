@@ -80,6 +80,8 @@ BOOL isnumber(char c) {
     return FALSE;
 }
 
+int error_count = 0;
+
 SITUATION WordDetect(FILE *fp) {
     char *c = (char *)malloc(2*sizeof(char));
     *(c+1) = 0;
@@ -91,11 +93,12 @@ SITUATION WordDetect(FILE *fp) {
     while(*c != EOF) {
         if(*c == ' '||*c == '\t')
             continue;
-        w.pre_line = line_count;    //line of the last word
+//        w.pre_line = line_count;    //line of the last word
         if(*c == '\n') {
             ++line_count;       //count the lines
             continue;
         }
+        w.line = line_count;    //line of the word
         if(isalpha(*c) == TRUE) {    //IDENT or KEY
             *c = getc(fp);
             while(*c == '_' || isalpha(*c)) {
@@ -108,17 +111,32 @@ SITUATION WordDetect(FILE *fp) {
                 w.kind = IDENT;
             else w.kind = type;
         } else if(isnumber(*c) == TRUE) {   //const number
+            w.text = strcat(w.text, c);
             *c = getc(fp);
-            while(isnumber(*c) || *c == '.') {
-                if(*c == '.') {
-                    if(w.kind == IDENT) {
-                        w.kind = ERROR_TOKEN;
-                        break;
-                    }
-                    w.kind = FLOAT_CONST;
-
-                }
+            if(isalpha(*c) && *c != 'x' && *c !='X') {
+                strcat(w.text, c);
+                w.kind = ERROR_TOKEN;
+                error_count++;
+                continue;
             }
+            int flag = 0, hexflag = 0;
+            while(*c == '.' || isnumber(*c) || *c == 'x' || *c == 'X') {
+                if(*c == '.' && flag == 0) { //'.' should be counted less then once
+                    strcat(w.text, c);
+                    flag = 1;
+                } else if(isnumber(*c)) {
+                    strcat(w.text, c);
+                } else if(*w.text == '0' && (*c == 'x' || *c == 'X') && hexflag == 0) {
+                    strcat(w.text, c);
+                    hexflag = 1;
+                } else {
+                    w.kind =ERROR_TOKEN;
+                    error_count++;
+                    break;
+                }
+                c = getc(fp);
+            }
+            ungetc(*c,fp);
         } else {
 
         }
