@@ -6,6 +6,7 @@
 #define SOURCE_PROGRAM_FORMATTING_WORDDETECT_H
 
 #include "HEAD.h"
+#include "automaton.h"
 
 enum token_kind {
     ERROR_TOKEN = 100, eof, IDENT,
@@ -39,7 +40,7 @@ enum token_kind {
 	MORE: more >
 	LESSEQ: less or equal <=
 	LESS: less <
-	NOTEQ: not qeual !=
+	NOTEQ: not equal !=
 	NOT: not !
 	AND: and &&
 	OR: or ||
@@ -48,7 +49,7 @@ enum token_kind {
 	SEMI: semicolon ;
 	COMMA: comma ,
 	LBP: left big bracket {
-	RBP: }
+	RBP: right big bracket }
 	LK: [
 	RK: ]
 	PRE: #
@@ -58,16 +59,26 @@ enum token_kind {
 */
 
 struct WORD {
-    int kind = 99;
+    int kind;
     char *text;
     int line;
+    int pre_line;
 };
 
 SITUATION WordDetect(FILE *fp) {
-    char c=getc(fp);
-    WORD w;
-    while(c!=EOF) {
-        if(c == ' ')
+    char c = getc(fp);
+    struct WORD w;
+    int line_count = 1;
+    AC_build();
+    while(c != EOF) {
+        if(c == ' '||c == '\t')
+            continue;
+        w.pre_line = line_count;
+        if(c == '\n') {
+            ++line_count;
+            continue;
+        }
+
     }
     return CORRECT;
 }

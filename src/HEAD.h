@@ -12,5 +12,7 @@
 #define WORD_ERROR 1
 #define SYNTAX_ERROR 2
 #define SITUATION int
+#define matched 1
+#define failed 0
 
 #endif //SOURCE_PROGRAM_FORMATTING_HEAD_H
