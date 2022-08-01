@@ -5,6 +5,7 @@
 #ifndef SOURCE_PROGRAM_FORMATTING_HEAD_H
 #define SOURCE_PROGRAM_FORMATTING_HEAD_H
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -12,7 +13,9 @@
 #define WORD_ERROR 1
 #define SYNTAX_ERROR 2
 #define SITUATION int
-#define matched 1
-#define failed 0
+#define unmatched 0
+#define TRUE 1
+#define FALSE 0
+#define BOOL int
 
 #endif //SOURCE_PROGRAM_FORMATTING_HEAD_H
