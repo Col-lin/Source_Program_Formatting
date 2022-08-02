@@ -97,6 +97,7 @@ SITUATION WordAnalysis(FILE *fp) {
     struct WORD w;
     w.text = (char *)malloc(32*sizeof(char));
     *w.text = 0;
+    w.kind = ERROR_TOKEN;
     int line_count = 1;
     list_build();
     while(*c != EOF) {
@@ -272,8 +273,72 @@ SITUATION WordAnalysis(FILE *fp) {
                         error_count++;
                     }
                     break;
+                case '|':
+                    *c = getc(fp);
+                    if(*c == '|') {     // ||
+                        strcat(w.text, c);
+                        w.kind = OR;
+                    } else {
+                        w.kind = ERROR_TOKEN;
+                        error_count++;
+                    }
+                    break;
+                case '(':
+                    cnt_lp++;
+                    w.kind = LP;
+                    break;
+                case ')':
+                    cnt_rp++;
+                    w.kind = RP;
+                    break;
+                case ';':
+                    w.kind = SEMI;
+                    break;
+                case ',':
+                    w.kind = COMMA;
+                    break;
+                case '\'':
+                    *c = getc(fp);
+                    strcat(w.text, c);
+                    *c = getc(fp);
+                    strcat(w.text, c);
+                    if(*c == '\'')
+                        w.kind = CHAR_CONST;
+                    else {
+                        w.kind = ERROR_TOKEN;
+                        error_count++;
+                    }
+                    break;
+                case '\"':
+                    do {
+                        *c = getc(fp);
+                        strcat(w.text, c);
+                    } while(*c != '\"');
+                    w.kind = STRING_CONST;
+                    break;
+                case '{':
+                    cnt_lbp++;
+                    w.kind = LBP;
+                    break;
+                case '}':
+                    cnt_rbp++;
+                    w.kind = RBP;
+                    break;
+                case '[':
+                    w.kind = LK;
+                    break;
+                case ']':
+                    w.kind = RK;
+                    break;
+                case '#':
+                    w.kind = PRE;
+                    break;
+                case '.':
+                    w.kind = DOT;
+                    break;
             }
         }
+        if(w.kind == ERROR_TOKEN) ++error_count;
         *c = getc(fp);
     }
     if(error_count > 0) return WORD_ERROR;
