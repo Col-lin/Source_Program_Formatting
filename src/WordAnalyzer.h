@@ -2,8 +2,8 @@
 // Created by Col_lin on 2022/7/31.
 //
 
-#ifndef SOURCE_PROGRAM_FORMATTING_WORDDETECT_H
-#define SOURCE_PROGRAM_FORMATTING_WORDDETECT_H
+#ifndef SOURCE_PROGRAM_FORMATTING_WORDANALYZER_H
+#define SOURCE_PROGRAM_FORMATTING_WORDANALYZER_H
 
 #include "HEAD.h"
 #include "MATCH.h"
@@ -90,12 +90,13 @@ BOOL isnumber(char c) {
 
 int error_count = 0;
 
-SITUATION WordDetect(FILE *fp) {
+SITUATION WordAnalysis(FILE *fp) {
     char *c = (char *)malloc(2*sizeof(char));
     *(c+1) = 0;
     *c = getc(fp);
     struct WORD w;
     w.text = (char *)malloc(32*sizeof(char));
+    *w.text = 0;
     int line_count = 1;
     list_build();
     while(*c != EOF) {
@@ -171,6 +172,7 @@ SITUATION WordDetect(FILE *fp) {
             }
         } else {                        //other cases
             strcat(w.text, c);
+            printf("%s\n",w.text);
             switch(*c) {
                 case '=':
                     *c = getc(fp);
@@ -260,11 +262,22 @@ SITUATION WordDetect(FILE *fp) {
                         w.kind = NOT;
                     }
                     break;
+                case '&':
+                    *c = getc(fp);
+                    if(*c == '&') {     // &&
+                        strcat(w.text, c);
+                        w.kind = AND;
+                    } else {
+                        w.kind = ERROR_TOKEN;
+                        error_count++;
+                    }
+                    break;
             }
         }
+        *c = getc(fp);
     }
     if(error_count > 0) return WORD_ERROR;
     return CORRECT;
 }
 
-#endif //SOURCE_PROGRAM_FORMATTING_WORDDETECT_H
+#endif //SOURCE_PROGRAM_FORMATTING_WORDANALYZER_H
