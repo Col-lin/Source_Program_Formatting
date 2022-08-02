@@ -16,7 +16,7 @@ enum token_kind {
     ASSIGN, MORE, LESS, EQUAL, NOTEQ, AND,
     OR, PLUSPLUS, MINUSMINUS, MOD, MOREEQ,
     LESSEQ, notEQ, NOT, SEMI, COMMA, LBP,
-    RBP, LK, RK, PRE, LANNO, BANNO, DOT};
+    RBP, LK, RK, PRE, LANNO, LBA, RBA, DOT};
 /*
     KEY: key word 1~35
     ERROR_TOKEN: error token
@@ -55,7 +55,8 @@ enum token_kind {
 	RK: ]
 	PRE: #
 	LANNO: //
-	BANNO: /* or * /
+	LBA: /*
+    RBA: * /
 	DOT: .
 */
 
@@ -65,6 +66,13 @@ struct WORD {
     int line;
     int pre_line;
 };
+
+int cnt_lp = 0;     //count (
+int cnt_rp = 0;     //count )
+int cnt_lbp = 0;    //count {
+int cnt_rbp = 0;    //count }
+int cnt_lba = 0;    //count /*
+int cnt_rba = 0;    //count */
 
 BOOL isalpha(char c) {
     if(c >= 'a' && c <= 'z')
@@ -129,18 +137,133 @@ SITUATION WordDetect(FILE *fp) {
                 } else if(*w.text == '0' && (*c == 'x' || *c == 'X') && hexflag == 0) {
                     strcat(w.text, c);
                     hexflag = 1;
-                } else {
-                    w.kind =ERROR_TOKEN;
-                    error_count++;
+                } else
                     break;
-                }
                 c = getc(fp);
             }
-            ungetc(*c,fp);
-        } else {
-
+            if(*(w.text+1) == 'x' || *(w.text+1) == 'X') {
+                *c = getc(fp);
+                if(strlen(w.text) > 2) {
+                    w.kind = INT_CONST;
+                    continue;
+                } else {
+                    w.kind = ERROR_TOKEN;
+                    error_count++;
+                }
+            }
+            if((*c == 'l' || *c == 'L') && !flag) {
+                strcat(w.text, c);
+                w.kind = LONG_CONST;
+                continue;
+            }
+            if((*c == 'f' || *c == 'F') && flag) {
+                strcat(w.text, c);
+                w.kind = FLOAT_CONST;
+                continue;
+            }
+            ungetc(*c, fp);
+            if(flag) {
+                w.kind = DOUBLE_CONST;
+                continue;
+            } else {
+                w.kind = INT_CONST;
+                continue;
+            }
+        } else {                        //other cases
+            strcat(w.text, c);
+            switch(*c) {
+                case '=':
+                    *c = getc(fp);
+                    if(*c == '=') {         // ==
+                        w.kind = EQUAL;
+                        strcat(w.text, c);
+                    } else {                // =
+                        ungetc(*c, fp);
+                        w.kind = ASSIGN;
+                    }
+                    break;
+                case '+':
+                    *c = getc(fp);
+                    if(*c == '+') {         // ++
+                        w.kind = PLUSPLUS;
+                        strcat(w.text, c);
+                    } else {                // +
+                        ungetc(*c, fp);
+                        w.kind = PLUS;
+                    }
+                    break;
+                case '-':
+                    *c = getc(fp);
+                    if(*c == '-') {     // --
+                        w.kind = MINUSMINUS;
+                        strcat(w.text, c);
+                    } else {            // -
+                        ungetc(*c, fp);
+                        w.kind = MINUS;
+                    }
+                    break;
+                case '*':
+                    *c = getc(fp);
+                    if(*c == '/') {     // */
+                        ++cnt_rba;
+                        strcat(w.text, c);
+                        w.kind = LBA;
+                    } else {            // *
+                        ungetc(*c, fp);
+                        w.kind = MULTIPLY;
+                    }
+                    break;
+                case '/':
+                    *c = getc(fp);
+                    if(*c == '/') {     // //
+                        strcat(w.text, c);
+                        w.kind = LANNO;
+                    } else if(*c == '*') {  // /*
+                        ++cnt_lba;
+                        strcat(w.text, c);
+                        w.kind = LBA;
+                    } else {
+                        ungetc(*c, fp);
+                        w.kind = DIVIDE;
+                    }
+                    break;
+                case '%':
+                    w.kind = MOD;
+                    break;
+                case '>':
+                    *c = getc(fp);
+                    if(*c == '=') {     // >=
+                        strcat(w.text, c);
+                        w.kind = MOREEQ;
+                    } else {            // >
+                        ungetc(*c, fp);
+                        w.kind = MORE;
+                    }
+                    break;
+                case '<':
+                    *c = getc(fp);
+                    if(*c == '=') {     // <=
+                        strcat(w.text, c);
+                        w.kind = LESSEQ;
+                    } else {            // <
+                        ungetc(c, fp);
+                        w.kind = LESS;
+                    }
+                    break;
+                case '!':
+                    *c = getc(fp);
+                    if(*c == '=') {     // !=
+                        strcat(w.text, c);
+                        w.kind = notEQ;
+                    } else {            // !
+                        ungetc(*c, fp);
+                        w.kind = NOT;
+                    }
+                    break;
+            }
         }
     }
+    if(error_count > 0) return WORD_ERROR;
     return CORRECT;
 }
 
