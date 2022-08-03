@@ -9,18 +9,17 @@
 #include "MATCH.h"
 
 enum token_kind {
-    ERROR_TOKEN = 100, eof, IDENT,
+    ERROR_TOKEN = 100, IDENT,
     CHAR_CONST, INT_CONST, FLOAT_CONST,
     DOUBLE_CONST, LONG_CONST, STRING_CONST,
     PLUS, MINUS, MULTIPLY, DIVIDE, LP, RP,
     ASSIGN, MORE, LESS, EQUAL, NOTEQ, AND,
     OR, PLUSPLUS, MINUSMINUS, MOD, MOREEQ,
-    LESSEQ, notEQ, NOT, SEMI, COMMA, LBP,
+    LESSEQ, NOT, SEMI, COMMA, LBP,
     RBP, LK, RK, PRE, LANNO, LBA, RBA, DOT};
 /*
     KEY: key word 1~35
     ERROR_TOKEN: error token
-	eof: end of file
 	IDENT: identifier
 	CHAR_CONST: const & char
 	INT_CONST: const & int
@@ -90,25 +89,43 @@ BOOL isnumber(char c) {
 
 int error_count = 0;
 
+char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
+                            "FLOAT_CONST", "DOUBLE_CONST", "LONG_CONST",
+                            "STRING_CONST", "PLUS", "MINUS", "MULTIPLY",
+                            "DIVIDE", "LP", "RP", "ASSIGN", "MORE", "LESS",
+                            "EQUAL", "NOTEQ", "AND", "OR", "PLUSPLUS",
+                            "MINUSMINUS", "MOD", "MOREEQ", "LESSEQ", "NOT",
+                            "SEMI", "COMMA", "LBP", "RBP", "LK", "RK", "PRE",
+                            "LANNO", "LBA", "RBA", "DOT"};
+
+void AnalysisCompleted(struct WORD w) {
+    printf("%s    %s\n",kind_name[w.kind - 100],w.text);
+    return;
+}
+
 SITUATION WordAnalysis(FILE *fp) {
     char *c = (char *)malloc(2*sizeof(char));
     *(c+1) = 0;
     *c = getc(fp);
     struct WORD w;
     w.text = (char *)malloc(32*sizeof(char));
-    *w.text = 0;
-    w.kind = ERROR_TOKEN;
     int line_count = 1;
     list_build();
     while(*c != EOF) {
-        if(*c == ' '||*c == '\t')
+        *w.text = 0;
+        w.kind = ERROR_TOKEN;
+        if(*c == ' '||*c == '\t') {
+            *c = getc(fp);
             continue;
+        }
 //        w.pre_line = line_count;    //line of the last word
         if(*c == '\n') {
             ++line_count;       //count the lines
+            *c = getc(fp);
             continue;
         }
         w.line = line_count;    //line of the word
+        w.text = strcat(w.text, c);
         if(isalpha(*c) == TRUE) {    //IDENT or KEY
             *c = getc(fp);
             while(*c == '_' || isalpha(*c)) {
@@ -121,12 +138,13 @@ SITUATION WordAnalysis(FILE *fp) {
                 w.kind = IDENT;
             else w.kind = type;
         } else if(isnumber(*c) == TRUE) {   //const number
-            w.text = strcat(w.text, c);
             *c = getc(fp);
             if(isalpha(*c) && *c != 'x' && *c !='X') {
                 strcat(w.text, c);
                 w.kind = ERROR_TOKEN;
                 error_count++;
+                AnalysisCompleted(w);
+                *c = getc(fp);
                 continue;
             }
             int flag = 0, hexflag = 0;
@@ -141,39 +159,51 @@ SITUATION WordAnalysis(FILE *fp) {
                     hexflag = 1;
                 } else
                     break;
-                c = getc(fp);
+                *c = getc(fp);
             }
             if(*(w.text+1) == 'x' || *(w.text+1) == 'X') {
                 *c = getc(fp);
                 if(strlen(w.text) > 2) {
                     w.kind = INT_CONST;
+                    AnalysisCompleted(w);
+                    *c = getc(fp);
                     continue;
                 } else {
                     w.kind = ERROR_TOKEN;
                     error_count++;
+                    AnalysisCompleted(w);
+                    *c = getc(fp);
+                    continue;
                 }
             }
             if((*c == 'l' || *c == 'L') && !flag) {
                 strcat(w.text, c);
                 w.kind = LONG_CONST;
+                AnalysisCompleted(w);
+                *c = getc(fp);
                 continue;
             }
             if((*c == 'f' || *c == 'F') && flag) {
                 strcat(w.text, c);
                 w.kind = FLOAT_CONST;
+                AnalysisCompleted(w);
+                *c = getc(fp);
                 continue;
             }
             ungetc(*c, fp);
             if(flag) {
                 w.kind = DOUBLE_CONST;
+                AnalysisCompleted(w);
+                *c = getc(fp);
                 continue;
             } else {
                 w.kind = INT_CONST;
+                AnalysisCompleted(w);
+                *c = getc(fp);
                 continue;
             }
         } else {                        //other cases
-            strcat(w.text, c);
-            printf("%s\n",w.text);
+//            printf("%s\n",w.text);
             switch(*c) {
                 case '=':
                     *c = getc(fp);
@@ -210,7 +240,7 @@ SITUATION WordAnalysis(FILE *fp) {
                     if(*c == '/') {     // */
                         ++cnt_rba;
                         strcat(w.text, c);
-                        w.kind = LBA;
+                        w.kind = RBA;
                     } else {            // *
                         ungetc(*c, fp);
                         w.kind = MULTIPLY;
@@ -249,7 +279,7 @@ SITUATION WordAnalysis(FILE *fp) {
                         strcat(w.text, c);
                         w.kind = LESSEQ;
                     } else {            // <
-                        ungetc(c, fp);
+                        ungetc(*c, fp);
                         w.kind = LESS;
                     }
                     break;
@@ -257,7 +287,7 @@ SITUATION WordAnalysis(FILE *fp) {
                     *c = getc(fp);
                     if(*c == '=') {     // !=
                         strcat(w.text, c);
-                        w.kind = notEQ;
+                        w.kind = NOTEQ;
                     } else {            // !
                         ungetc(*c, fp);
                         w.kind = NOT;
@@ -339,6 +369,7 @@ SITUATION WordAnalysis(FILE *fp) {
             }
         }
         if(w.kind == ERROR_TOKEN) ++error_count;
+        AnalysisCompleted(w);
         *c = getc(fp);
     }
     if(error_count > 0) return WORD_ERROR;
