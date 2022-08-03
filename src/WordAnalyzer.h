@@ -99,7 +99,10 @@ char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
                             "LANNO", "LBA", "RBA", "DOT"};
 
 void AnalysisCompleted(struct WORD w) {
-    printf("%s    %s\n",kind_name[w.kind - 100],w.text);
+    if(w.kind < 100)
+        printf("KEY%d   %s\n",w.kind,w.text);
+    else
+        printf("%s    %s\n",kind_name[w.kind - 100],w.text);
     return;
 }
 
@@ -110,7 +113,6 @@ SITUATION WordAnalysis(FILE *fp) {
     struct WORD w;
     w.text = (char *)malloc(32*sizeof(char));
     int line_count = 1;
-    list_build();
     while(*c != EOF) {
         *w.text = 0;
         w.kind = ERROR_TOKEN;
