@@ -18,4 +18,14 @@
 #define FALSE 0
 #define BOOL int
 
+struct TreeNode{
+    struct TreeNode * son[4] = NULL;
+    char *token;
+};
+
+struct tree{
+    struct tree *lson = NULL;
+    struct tree *rson = NULL;
+};
+
 #endif //SOURCE_PROGRAM_FORMATTING_HEAD_H

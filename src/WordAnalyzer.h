@@ -98,11 +98,13 @@ char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
                             "SEMI", "COMMA", "LBP", "RBP", "LK", "RK", "PRE",
                             "LANNO", "LBA", "RBA", "DOT"};
 
+int last_line = 0;
 void AnalysisCompleted(struct WORD w) {
     if(w.kind < 100)
         printf("KEY%d   %s\n",w.kind,w.text);
     else
         printf("%s    %s\n",kind_name[w.kind - 100],w.text);
+    last_line = w.line;
     return;
 }
 
@@ -120,7 +122,6 @@ SITUATION WordAnalysis(FILE *fp) {
             *c = getc(fp);
             continue;
         }
-//        w.pre_line = line_count;    //line of the last word
         if(*c == '\n') {
             ++line_count;       //count the lines
             *c = getc(fp);
@@ -205,7 +206,6 @@ SITUATION WordAnalysis(FILE *fp) {
                 continue;
             }
         } else {                        //other cases
-//            printf("%s\n",w.text);
             switch(*c) {
                 case '=':
                     *c = getc(fp);
