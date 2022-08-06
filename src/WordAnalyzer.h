@@ -6,65 +6,8 @@
 #define SOURCE_PROGRAM_FORMATTING_WORDANALYZER_H
 
 #include "HEAD.h"
-#include "MATCH.h"
-
-enum token_kind {
-    ERROR_TOKEN = 100, IDENT,
-    CHAR_CONST, INT_CONST, FLOAT_CONST,
-    DOUBLE_CONST, LONG_CONST, STRING_CONST,
-    PLUS, MINUS, MULTIPLY, DIVIDE, LP, RP,
-    ASSIGN, MORE, LESS, EQUAL, NOTEQ, AND,
-    OR, PLUSPLUS, MINUSMINUS, MOD, MOREEQ,
-    LESSEQ, NOT, SEMI, COMMA, LBP,
-    RBP, LK, RK, PRE, LANNO, LBA, RBA, DOT};
-/*
-    KEY: key word 1~35
-    ERROR_TOKEN: error token
-	IDENT: identifier
-	CHAR_CONST: const & char
-	INT_CONST: const & int
-	FLOAT_CONST: const & float
-	DOUBLE_CONST: const & double
-	LONG_CONST: const & long
-	STRING_CONST: const & string
-	EQUAL: equal ==
-	ASSIGN: assign =
-	PLUSPLUS: plusplus ++
-	PLUS: plus +
-	MINUSMINUS: minusminus --
-	MINUS: minus -
-	MULTIPLY: multiply *
-	DIVIDE: divide /
-	MOD: mod %
-	MOREEQ: more or equal >=
-	MORE: more >
-	LESSEQ: less or equal <=
-	LESS: less <
-	NOTEQ: not equal !=
-	NOT: not !
-	AND: and &&
-	OR: or ||
-	LP: left parentheses (
-	RP: right parentheses )
-	SEMI: semicolon ;
-	COMMA: comma ,
-	LBP: left big bracket {
-	RBP: right big bracket }
-	LK: [
-	RK: ]
-	PRE: #
-	LANNO: //
-	LBA: /*
-    RBA: * /
-	DOT: .
-*/
-
-struct WORD {
-    int kind;
-    char *text;
-    int line;
-    int pre_line;
-};
+#include "Match.h"
+#include "List.h"
 
 int cnt_lp = 0;     //count (
 int cnt_rp = 0;     //count )
@@ -98,17 +41,21 @@ char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
                             "SEMI", "COMMA", "LBP", "RBP", "LK", "RK", "PRE",
                             "LANNO", "LBA", "RBA", "DOT"};
 
-int last_line = 0;
+
 void AnalysisCompleted(struct WORD w) {
+    static last_line = 0;
+    w.pre_line = last_line;
     if(w.kind < 100)
         printf("KEY%d   %s\n",w.kind,w.text);
     else
         printf("%s    %s\n",kind_name[w.kind - 100],w.text);
     last_line = w.line;
+    AddList(token_list, w);
     return;
 }
 
 SITUATION WordAnalysis(FILE *fp) {
+    token_list = CreatList();
     char *c = (char *)malloc(2*sizeof(char));
     *(c+1) = 0;
     *c = getc(fp);

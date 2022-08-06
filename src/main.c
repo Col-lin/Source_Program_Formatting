@@ -1,12 +1,17 @@
 #include "HEAD.h"
 #include "WordAnalyzer.h"
-
-FILE *fp;
+#include "SyntaxAnalyzer.h"
 
 int main() {
-    fp = fopen("..\\test\\test.c","r");
-    if(WordAnalysis(fp) == WORD_ERROR)
+    fil = fopen("..\\test\\test.c","r");
+    if(WordAnalysis(fil) == WORD_ERROR) {
+        fclose(fil);
         return 0;
-    fclose(fp);
+    }
+    if(SyntaxAnalyzer() == SYNTAX_ERROR) {
+        fclose(fil);
+        return 0;
+    }
+    fclose(fil);
     return 0;
 }
