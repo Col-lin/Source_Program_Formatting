@@ -19,7 +19,7 @@ char key_name[36][10] = {"", "auto", "break", "case", "char",
 int KeyWordMatching(char *s) {
     for(int i=1; i<=35; ++i)
         if(strcmp(s, key_name[i]) == 0) return i;
-    return unmatched;
+    return UNMATCHED;
 }
 
 #endif //SOURCE_PROGRAM_FORMATTING_MATCH_H

@@ -43,24 +43,28 @@ char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
 
 
 void AnalysisCompleted(struct WORD w) {
-    static last_line = 0;
+    static int last_line = 0;
     w.pre_line = last_line;
+    /*
     if(w.kind < 100)
         printf("KEY%d   %s\n",w.kind,w.text);
     else
         printf("%s    %s\n",kind_name[w.kind - 100],w.text);
+        */
     last_line = w.line;
-    AddList(token_list, w);
+    struct WORD p = w;
+    p.text = (char*) calloc(32,sizeof (char));
+    strcat(p.text, w.text);
+    AddList(token_list, p);
     return;
 }
 
 SITUATION WordAnalysis(FILE *fp) {
     token_list = CreatList();
-    char *c = (char *)malloc(2*sizeof(char));
-    *(c+1) = 0;
+    char* c = (char*) calloc(2,sizeof (char));
     *c = getc(fp);
     struct WORD w;
-    w.text = (char *)malloc(32*sizeof(char));
+    w.text = (char*) calloc(32,sizeof (char));
     int line_count = 1;
     while(*c != EOF) {
         *w.text = 0;
@@ -78,13 +82,13 @@ SITUATION WordAnalysis(FILE *fp) {
         w.text = strcat(w.text, c);
         if(isalpha(*c) == TRUE) {    //IDENT or KEY
             *c = getc(fp);
-            while(*c == '_' || isalpha(*c)) {
+            while(*c == '_' || isalpha(*c) || isnumber(*c)) {
                 strcat(w.text, c);
                 *c = getc(fp);
             }
             ungetc(*c, fp);
             SITUATION type = KeyWordMatching(w.text);
-            if(type == unmatched)
+            if(type == UNMATCHED)
                 w.kind = IDENT;
             else w.kind = type;
         } else if(isnumber(*c) == TRUE) {   //const number
@@ -321,6 +325,8 @@ SITUATION WordAnalysis(FILE *fp) {
         AnalysisCompleted(w);
         *c = getc(fp);
     }
+    free(c);
+    free(w.text);
     if(error_count > 0) return WORD_ERROR;
     return CORRECT;
 }

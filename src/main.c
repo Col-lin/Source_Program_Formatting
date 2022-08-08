@@ -8,6 +8,14 @@ int main() {
         fclose(fil);
         return 0;
     }
+/*
+    struct WORD w = GetToken(token_list);
+    while(w.kind != eof) {
+        printf("%s\n",w.text);
+        w = GetToken(token_list);
+    }
+    return 0;
+    */
     if(SyntaxAnalyzer() == SYNTAX_ERROR) {
         fclose(fil);
         return 0;

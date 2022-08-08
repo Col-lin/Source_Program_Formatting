@@ -11,7 +11,7 @@ void CreatTree(struct tree *t) {
     return;
 }
 
-void DeleteTree(struct tree *t) {
+void DeleteTree(struct TreeNode *t) {
     return;
 }
 

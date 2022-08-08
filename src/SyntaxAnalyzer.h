@@ -10,6 +10,7 @@
 #include "AST.h"
 
 struct WORD w;
+struct List* func;
 
 SITUATION SyntaxAnalyzer() {
     if(Program(NULL) == NULL) return SYNTAX_ERROR;
@@ -34,6 +35,7 @@ struct TreeNode* Program() {
         printf("EOF\n");
         return NULL;
     }
+    func = CreatList();
     w = GetToken(token_list);
     struct TreeNode* p = ExtDefList(NULL);
     if(p != NULL || w.kind == eof)
@@ -58,22 +60,100 @@ struct TreeNode* ExtDefList() {
 }
 
 //外部定义
-struct TreeNode* Extdef() {
+struct TreeNode* ExtDef() {
     struct TreeNode* p =NULL;
+    //处理预编译部分
     while(w.kind == PRE) {          // #
         w = GetToken(token_list);
         if(w.kind != 8 && w.kind != 18) {    //8:define 18:include
-            printf("Precompiled Error on line: %d\n", w.line);
+            printf("Precompiled Error on line: %d\n", w.pre_line);
             return NULL;
         }
         if(w.kind == 8) {           // define
             w = GetToken(token_list);
             if(w.kind != IDENT) {
-                printf("Not Identifier on line: %d\n",w.line);
+                printf("Not Identifier on line: %d\n",w.pre_line);
                 return NULL;
             }
+            w = GetToken(token_list);
+            if(w.kind != INT_CONST && w.kind != DOUBLE_CONST) {
+                printf("Precomplied Error on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            struct TreeNode *p = NewTreeNode();
+            w = GetToken(token_list);
+            return p;
+        } else {                // include
+            w = GetToken(token_list);
+            if(w.kind != LESS){
+                printf("Precomplied Error on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            char* s = (char*) calloc(32,sizeof (char));
+            w = GetToken(token_list);       //文件名
+            strcat(s, w.text);
+            w = GetToken(token_list);       // .
+            strcat(s, w.text);
+            if(w.kind != DOT) {
+                printf("Precomplied Error on line: %d\n",w.pre_line);
+                free(s);
+                return NULL;
+            }
+            w = GetToken(token_list);       //拓展名
+            strcat(s, w.text);
+            w = GetToken(token_list);
+            if(w.kind != MORE) {
+                printf("Precomplied Error on line: %d\n",w.pre_line);
+                free(s);
+                return NULL;
+            }
+            struct TreeNode* p = NewTreeNode();
+            return p;
+        }
+    }
+    //处理函数调用或变量初始化
+    while(w.kind == IDENT) {
+        //函数调用，查询函数是否已经被定义
+        if(Find(func,w.text) == MATCHED) {
+            w = GetToken(token_list);
+            if(w.kind != LP) {
+                printf("Expected \'(\' on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            if(w.kind != RP && w.kind != IDENT) {
+                printf("Not Identifier on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            while(w.kind != RP) {
+                w = GetToken(token_list);
+                if(w.kind == RP)
+                    break;
+                if(w.kind != COMMA) {        // , 分隔函数参数
+                    printf("Expected \',\' on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+                w = GetToken(token_list);
+                if(w.kind != IDENT) {
+                    printf("Not Identifier on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+            }
+            w = GetToken(token_list);
+            if(w.kind != SEMI) {            // ; 语句结尾
+                printf("Expected \';\' on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            struct TreeNode* p = NewTreeNode();
+            return p;
         }
     }
     return p;
+}
+
+// 表达式分析
+struct TreeNode* Expression() {
+    //处理函数调用
+
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H

@@ -13,7 +13,8 @@
 #define WORD_ERROR 1
 #define SYNTAX_ERROR 2
 #define SITUATION int
-#define unmatched 0
+#define MATCHED 1
+#define UNMATCHED 0
 #define TRUE 1
 #define FALSE 0
 #define BOOL int
@@ -86,8 +87,8 @@ struct TreeNode* NewTreeNode() {
 }
 
 struct tree{
-    struct tree *lson = NULL;
-    struct tree *rson = NULL;
+    struct tree *lson;
+    struct tree *rson;
 };
 
 struct WORD {
@@ -108,7 +109,7 @@ struct List{
     struct Node* last_read;
 };
 
-struct List token_list;
+struct List *token_list;
 
 struct TreeNode* Program();
 //程序分析
@@ -130,6 +131,6 @@ struct TreeNode* SentenList(struct TreeNode* root);
 //语句序列
 struct TreeNode* Sentence(struct TreeNode* root);
 //语句分析
-struct TreeNode* Expression(int end);
+struct TreeNode* Expression();
 //表达式分析
 #endif //SOURCE_PROGRAM_FORMATTING_HEAD_H
