@@ -108,6 +108,7 @@ struct TreeNode* ExtDef() {
                 return NULL;
             }
             struct TreeNode* p = NewTreeNode();
+            w = GetToken(token_list);
             return p;
         }
     }
@@ -144,16 +145,55 @@ struct TreeNode* ExtDef() {
                 printf("Expected \';\' on line: %d\n",w.pre_line);
                 return NULL;
             }
+            w = GetToken(token_list);
             struct TreeNode* p = NewTreeNode();
             return p;
         }
+        // 调用表达式处理初始化表达式
+        p = Expression(SEMI);
+        if(p == NULL) {
+            printf("Wrong Expression on line: %d\n",w.pre_line);
+            return NULL;
+        }
+        w = GetToken(token_list);
+    }
+    // 处理行注释和注释块
+    while(w.kind == LANNO) {        // 行注释
+        char *s = (char*) calloc(100,sizeof (char));
+        char *c = (char*) calloc(2,sizeof (char));
+        *c = ' ';
+        int l = w.line;
+        w = GetToken(token_list);
+        while(w.line == l) {
+            strcat(s, w.text);
+            strcat(s, c);
+            w = GetToken(token_list);
+        }
+        free(c);
+        free(s);
+        struct TreeNode* p = NewTreeNode();
+        return p;
+    }
+    while(w.kind == LBA) {      // 块注释
+        char *s = (char*) calloc(1000,sizeof (char));
+        char *c = (char*) calloc(2,sizeof (char));
+        char *n = (char*) calloc(2,sizeof (char));
+        *c = ' ';
+        *n = '\n';
+        w = GetToken(token_list);
+        while(w.kind != RBA) {
+            if(w.pre_line < w.line)
+                strcat(s, n);
+            strcat(s, w.text);
+            strcat(s, c);
+            w = GetToken(token_list);
+        }
+        free(s);
+        free(c);
+        free(n);
+        struct TreeNode* p = NewTreeNode();
+        return p;
     }
     return p;
-}
-
-// 表达式分析
-struct TreeNode* Expression() {
-    //处理函数调用
-
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H

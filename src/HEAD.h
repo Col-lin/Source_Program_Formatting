@@ -131,6 +131,6 @@ struct TreeNode* SentenList(struct TreeNode* root);
 //语句序列
 struct TreeNode* Sentence(struct TreeNode* root);
 //语句分析
-struct TreeNode* Expression();
+struct TreeNode* Expression(int end);
 //表达式分析
 #endif //SOURCE_PROGRAM_FORMATTING_HEAD_H
