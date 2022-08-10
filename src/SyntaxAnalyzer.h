@@ -368,6 +368,30 @@ struct TreeNode* FuncDef() {
 
 // 形式参数序列
 struct TreeNode* FormPara() {
+    static int CommaFlag = 0;
+    w = GetToken(token_list);
+    struct TreeNode* root = NewTreeNode();
+    struct TreeNode* p = root;
+    if(w.kind == RP) {
+        if(CommaFlag) {
+            CommaFlag = 0;
+            printf("Expected Parameter on line: %d\n",w.pre_line);
+            DeleteTree(root);
+            return NULL;
+        } else {
+            return root;
+        }
+    } else if(w.kind < 100) {
+        CommaFlag = 0;
+        if(w.kind == 5) {       // 5: const 常量
+            w = GetToken(token_list);
+            if(w.kind >= 100) {
+                printf("Not a Key Word on line: %d\n",w.pre_line);
+                DeleteTree(root);
+                return NULL;
+            }
+        }
+    }
     return NULL;
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H
