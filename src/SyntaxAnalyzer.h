@@ -11,6 +11,19 @@
 
 struct WORD w;
 struct List* func;
+int KeyType;
+int ConstType;
+char* text;
+
+int ToInt(char* s) {
+    int k = 0;
+    while(s) {
+        k *= 10;
+        k += (*s) - 48;
+        s++;
+    }
+    return k;
+}
 
 SITUATION SyntaxAnalyzer() {
     if(Program(NULL) == NULL) return SYNTAX_ERROR;
@@ -36,8 +49,10 @@ struct TreeNode* Program() {
         return NULL;
     }
     func = CreatList();
+    text = (char*) calloc(100,sizeof (char));
     w = GetToken(token_list);
     struct TreeNode* p = ExtDefList(NULL);
+    free(text);
     if(p != NULL || w.kind == eof)
         return p;
     return NULL;
@@ -61,7 +76,6 @@ struct TreeNode* ExtDefList() {
 
 //外部定义
 struct TreeNode* ExtDef() {
-    struct TreeNode* p =NULL;
     //处理预编译部分
     while(w.kind == PRE) {          // #
         w = GetToken(token_list);
@@ -150,7 +164,7 @@ struct TreeNode* ExtDef() {
             return p;
         }
         // 调用表达式处理初始化表达式
-        p = Expression(SEMI);
+        struct TreeNode* p = Expression(SEMI);
         if(p == NULL) {
             printf("Wrong Expression on line: %d\n",w.pre_line);
             return NULL;
@@ -194,6 +208,99 @@ struct TreeNode* ExtDef() {
         struct TreeNode* p = NewTreeNode();
         return p;
     }
-    return p;
+    if(w.kind > IDENT) {
+        printf("Not a Key Word on line: %d\n",w.pre_line);
+        return NULL;
+    }
+    // 变量类型
+    KeyType = w.kind;
+    // 5: const常量
+    if(w.kind == 5) {
+        w = GetToken(token_list);
+        KeyType = w.kind;
+        ConstType = 1;
+    }
+    w = GetToken(token_list);
+    if(w.kind != IDENT) {
+        printf("Not Identifier on line: %d\n",w.pre_line);
+        return NULL;
+    }
+    // 记录变量名
+    strcat(text, w.text);
+    struct TreeNode* p = NewTreeNode();
+    w = GetToken(token_list);
+    // 调用外部变量定义
+    if(w.kind != LP)
+        p->son[0] = ExtVarDef();
+    // 调用函数定义
+    else
+        p->son[0] = FuncDef();
+    if(p->son != NULL)
+        return p;
+    DeleteTree(p);
+        return NULL;
+}
+
+// 外部变量定义
+struct TreeNode* ExtVarDef() {
+    struct TreeNode* root = NewTreeNode();
+    root->son[0] = NewTreeNode();
+    strcat(root->son[0]->token, kind_name[KeyType - 100]);
+    if(ConstType) {
+        ConstType = 0;
+    }
+    root->son[1] = NewTreeNode();
+    struct TreeNode* p =root->son[1];
+    p->son[0] = NewTreeNode();
+    strcat(p->son[0]->token, text);
+    *text = 0;
+    int flag = 0;
+    while(1) {
+        if(w.kind == ASSIGN) {                  // 赋值语句 int i = 1;
+            w = GetToken(token_list);
+            struct TreeNode* q = Sentence();
+            if(q == NULL)
+                return NULL;
+            flag = 1;
+        }
+        if(w.kind == LK) {                      // 定义数组 int a[1];
+            w = GetToken(token_list);
+            if(w.kind != INT_CONST) {
+                printf("Expected Integer in [] on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            int size = ToInt(w.text);
+            w = GetToken(token_list);
+            if(w.kind != RK) {
+                printf("Expected \']\' after \'[\' on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+        }
+        if(!flag && w.kind != SEMI && w.kind != COMMA) {
+            printf("Expected \',\' or \';\' on line: %d\n",w.pre_line);
+            return NULL;
+        }
+        if(flag || w.kind == SEMI) {
+            if(!flag)
+                w = GetToken(token_list);
+            return root;
+        }
+        w = GetToken(token_list);
+        if(w.kind != IDENT) {
+            printf("Not Identifier ono line: %d\n",w.pre_line);
+            return NULL;
+        }
+        p->son[1] = NewTreeNode();
+        p = p->son[1];
+        p->son[0] = NewTreeNode();
+        strcat(p->son[0]->token, w.text);
+        w = GetToken(token_list);
+    }
+}
+
+// 函数定义
+struct TreeNode* FuncDef() {
+    
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H

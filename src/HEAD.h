@@ -21,15 +21,6 @@
 
 FILE *fil;
 
-enum token_kind {
-    ERROR_TOKEN = 100, IDENT,
-    CHAR_CONST, INT_CONST, FLOAT_CONST,
-    DOUBLE_CONST, LONG_CONST, STRING_CONST,
-    PLUS, MINUS, MULTIPLY, DIVIDE, LP, RP,
-    ASSIGN, MORE, LESS, EQUAL, NOTEQ, AND,
-    OR, PLUSPLUS, MINUSMINUS, MOD, MOREEQ,
-    LESSEQ, NOT, SEMI, COMMA, LBP, RBP, LK,
-    RK, PRE, LANNO, LBA, RBA, DOT, eof};
 /*
     KEY: key word 1~35
     ERROR_TOKEN: error token
@@ -72,6 +63,17 @@ enum token_kind {
 	DOT: .
     eof: end of file
 */
+enum token_kind {
+    ERROR_TOKEN = 100, IDENT,
+    CHAR_CONST, INT_CONST, FLOAT_CONST,
+    DOUBLE_CONST, LONG_CONST, STRING_CONST,
+    PLUS, MINUS, MULTIPLY, DIVIDE, LP, RP,
+    ASSIGN, MORE, LESS, EQUAL, NOTEQ, AND,
+    OR, PLUSPLUS, MINUSMINUS, MOD, MOREEQ,
+    LESSEQ, NOT, SEMI, COMMA, LBP, RBP, LK,
+    RK, PRE, LANNO, LBA, RBA, DOT, eof
+};
+
 
 struct TreeNode{
     struct TreeNode * son[4];
@@ -117,9 +119,9 @@ struct TreeNode* ExtDefList();
 //外部定义序列
 struct TreeNode* ExtDef();
 //外部定义
-struct TreeNode* ExtVarDef(struct TreeNode* root);
+struct TreeNode* ExtVarDef();
 //外部变量定义
-struct TreeNode* FuncDef(struct TreeNode* root);
+struct TreeNode* FuncDef();
 //函数定义
 struct TreeNode* FormPara(struct TreeNode* root);
 //形式参数序列
@@ -129,7 +131,7 @@ struct TreeNode* LocalVar(struct TreeNode* root);
 //局部变量定义
 struct TreeNode* SentenList(struct TreeNode* root);
 //语句序列
-struct TreeNode* Sentence(struct TreeNode* root);
+struct TreeNode* Sentence();
 //语句分析
 struct TreeNode* Expression(int end);
 //表达式分析
