@@ -20,7 +20,7 @@ void AddList(struct List* l, struct WORD w) {
     if(l->size == 1) {
         l->next = (struct Node*) malloc(sizeof (struct Node));
         (l->next)->next = NULL;
-        (l->next)->word =w;
+        (l->next)->word = w;
         return;
     }
     struct Node* p = l->next;

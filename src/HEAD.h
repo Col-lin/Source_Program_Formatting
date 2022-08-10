@@ -123,9 +123,9 @@ struct TreeNode* ExtVarDef();
 //外部变量定义
 struct TreeNode* FuncDef();
 //函数定义
-struct TreeNode* FormPara(struct TreeNode* root);
+struct TreeNode* FormPara();
 //形式参数序列
-struct TreeNode* Compound(struct TreeNode* root);
+struct TreeNode* Compound();
 //复合语句
 struct TreeNode* LocalVar(struct TreeNode* root);
 //局部变量定义

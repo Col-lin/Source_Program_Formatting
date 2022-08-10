@@ -273,12 +273,14 @@ struct TreeNode* ExtVarDef() {
             w = GetToken(token_list);
             if(w.kind != RK) {
                 printf("Expected \']\' after \'[\' on line: %d\n",w.pre_line);
+                DeleteTree(root);
                 return NULL;
             }
             w = GetToken(token_list);
         }
         if(!flag && w.kind != SEMI && w.kind != COMMA) {
             printf("Expected \',\' or \';\' on line: %d\n",w.pre_line);
+            DeleteTree(root);
             return NULL;
         }
         if(flag || w.kind == SEMI) {
@@ -289,6 +291,7 @@ struct TreeNode* ExtVarDef() {
         w = GetToken(token_list);
         if(w.kind != IDENT) {
             printf("Not Identifier ono line: %d\n",w.pre_line);
+            DeleteTree(root);
             return NULL;
         }
         p->son[1] = NewTreeNode();
@@ -301,6 +304,70 @@ struct TreeNode* ExtVarDef() {
 
 // 函数定义
 struct TreeNode* FuncDef() {
-    
+    struct TreeNode* root = NewTreeNode();
+    root->son[0] = NewTreeNode();
+    strcat(root->son[0]->token, kind_name[KeyType - 100]);
+    root->son[1] = NewTreeNode();
+    strcat(root->son[1]->token, text);
+    // 记录已定义函数
+    struct WORD wd;
+    wd.text = (char*) calloc(32,sizeof (char));
+    strcat(wd.text,text);
+    wd.kind = KeyType;
+    AddList(func, wd);
+    // 调用形参
+    root->son[1]->son[0] = FormPara();
+    if(root->son[1]->son[0] == NULL) {
+        DeleteTree(root);
+        return NULL;
+    }
+    w = GetToken(token_list);
+    struct TreeNode* p = NULL;
+    // 注释
+    char *s = (char*) calloc(1000,sizeof (char));
+    char *c = (char*) calloc(2,sizeof (char));
+    char *n = (char*) calloc(2,sizeof (char));
+    *c = ' ';
+    *n = '\n';
+    if(w.kind == LANNO) {
+        w = GetToken(token_list);
+        while(w.pre_line == w.line) {
+            strcat(s, w.text);
+            strcat(s, c);
+            w = GetToken(token_list);
+        }
+    } else if(w.kind == LBA) {
+        w = GetToken(token_list);
+        while(w.kind != RBA) {
+            if(w.pre_line < w.line)
+                strcat(s, n);
+            strcat(s, w.text);
+            strcat(s, c);
+        }
+    }
+    free(s);
+    free(c);
+    free(n);
+    // 函数声明
+    if(w.kind == SEMI) {
+        w = GetToken(token_list);
+        return root;
+    } else if(w.kind == LBP) {          //函数定义
+        root->son[2] = Compound();
+        if(root->son[2] == NULL) {
+            DeleteTree(root);
+            return NULL;
+        }
+    } else {
+        printf("Wrong Syntax on line: %d\n",w.pre_line);
+        DeleteTree(root);
+        return NULL;
+    }
+    return root;
+}
+
+// 形式参数序列
+struct TreeNode* FormPara() {
+    return NULL;
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H
