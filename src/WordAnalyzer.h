@@ -30,8 +30,6 @@ BOOL isnumber(char c) {
     return FALSE;
 }
 
-int error_count = 0;
-
 char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
                             "FLOAT_CONST", "DOUBLE_CONST", "LONG_CONST",
                             "STRING_CONST", "PLUS", "MINUS", "MULTIPLY",

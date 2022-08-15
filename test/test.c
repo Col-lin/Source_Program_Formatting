@@ -1,7 +1,6 @@
 #include<WordDetect.h>
 #define constant 30
 int i,j;
-i = 30L;
 double b = 3.0;
 const float a = 4.1F;
 int array[30];

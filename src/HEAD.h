@@ -74,6 +74,7 @@ enum token_kind {
     RK, PRE, LANNO, LBA, RBA, DOT, eof
 };
 
+int error_count = 0;
 
 struct TreeNode{
     struct TreeNode * son[4];
@@ -84,7 +85,7 @@ struct TreeNode* NewTreeNode() {
     struct TreeNode* p = (struct TreeNode*) malloc(sizeof (struct TreeNode));
     for(int i=0; i<4; ++i)
         p->son[i] = NULL;
-    p->token = NULL;
+    p->token = calloc(32,sizeof (char));
     return p;
 }
 
@@ -127,9 +128,9 @@ struct TreeNode* FormPara();
 //形式参数序列
 struct TreeNode* Compound();
 //复合语句
-struct TreeNode* LocalVar(struct TreeNode* root);
+struct TreeNode* LocalVar();
 //局部变量定义
-struct TreeNode* SentenList(struct TreeNode* root);
+struct TreeNode* SentenList();
 //语句序列
 struct TreeNode* Sentence();
 //语句分析

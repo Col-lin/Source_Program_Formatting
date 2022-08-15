@@ -51,7 +51,7 @@ struct TreeNode* Program() {
     func = CreatList();
     text = (char*) calloc(100,sizeof (char));
     w = GetToken(token_list);
-    struct TreeNode* p = ExtDefList(NULL);
+    struct TreeNode* p = ExtDefList();
     free(text);
     if(p != NULL || w.kind == eof)
         return p;
@@ -86,7 +86,7 @@ struct TreeNode* ExtDef() {
         if(w.kind == 8) {           // define
             w = GetToken(token_list);
             if(w.kind != IDENT) {
-                printf("Not Identifier on line: %d\n",w.pre_line);
+                printf("Not a Identifier on line: %d\n",w.pre_line);
                 return NULL;
             }
             w = GetToken(token_list);
@@ -137,7 +137,7 @@ struct TreeNode* ExtDef() {
             }
             w = GetToken(token_list);
             if(w.kind != RP && w.kind != IDENT) {
-                printf("Not Identifier on line: %d\n",w.pre_line);
+                printf("Not a Identifier on line: %d\n",w.pre_line);
                 return NULL;
             }
             while(w.kind != RP) {
@@ -150,7 +150,7 @@ struct TreeNode* ExtDef() {
                 }
                 w = GetToken(token_list);
                 if(w.kind != IDENT) {
-                    printf("Not Identifier on line: %d\n",w.pre_line);
+                    printf("Not a Identifier on line: %d\n",w.pre_line);
                     return NULL;
                 }
             }
@@ -222,7 +222,7 @@ struct TreeNode* ExtDef() {
     }
     w = GetToken(token_list);
     if(w.kind != IDENT) {
-        printf("Not Identifier on line: %d\n",w.pre_line);
+        printf("Not a Identifier on line: %d\n",w.pre_line);
         return NULL;
     }
     // 记录变量名
@@ -245,7 +245,7 @@ struct TreeNode* ExtDef() {
 struct TreeNode* ExtVarDef() {
     struct TreeNode* root = NewTreeNode();
     root->son[0] = NewTreeNode();
-    strcat(root->son[0]->token, kind_name[KeyType - 100]);
+    strcat(root->son[0]->token, key_name[KeyType]);
     if(ConstType) {
         ConstType = 0;
     }
@@ -259,8 +259,10 @@ struct TreeNode* ExtVarDef() {
         if(w.kind == ASSIGN) {                  // 赋值语句 int i = 1;
             w = GetToken(token_list);
             struct TreeNode* q = Sentence();
-            if(q == NULL)
+            if(q == NULL) {
+                DeleteTree(root);
                 return NULL;
+            }
             flag = 1;
         }
         if(w.kind == LK) {                      // 定义数组 int a[1];
@@ -290,7 +292,7 @@ struct TreeNode* ExtVarDef() {
         }
         w = GetToken(token_list);
         if(w.kind != IDENT) {
-            printf("Not Identifier ono line: %d\n",w.pre_line);
+            printf("Not a Identifier ono line: %d\n",w.pre_line);
             DeleteTree(root);
             return NULL;
         }
@@ -306,7 +308,7 @@ struct TreeNode* ExtVarDef() {
 struct TreeNode* FuncDef() {
     struct TreeNode* root = NewTreeNode();
     root->son[0] = NewTreeNode();
-    strcat(root->son[0]->token, kind_name[KeyType - 100]);
+    strcat(root->son[0]->token, key_name[KeyType]);
     root->son[1] = NewTreeNode();
     strcat(root->son[1]->token, text);
     // 记录已定义函数
@@ -391,7 +393,163 @@ struct TreeNode* FormPara() {
                 return NULL;
             }
         }
+        p->son[0] = NewTreeNode();
+        p->son[0]->son[0] = NewTreeNode();
+        strcat(p->son[0]->son[0]->token, w.text);
+        w = GetToken(token_list);
+        if(w.kind != IDENT) {
+            printf("Not a Identifier on line: %d\n",w.pre_line);
+            DeleteTree(root);
+            return NULL;
+        }
+        p->son[0]->son[1] = NewTreeNode();
+        strcat(p->son[0]->son[1]->token, w.text);
+        w = GetToken(token_list);
+        if(w.kind == RP) {
+            p->son[1] = NULL;
+            return root;
+        }
+        if(w.kind != COMMA) {
+            printf("Expected \',\' on line: %d\n",w.pre_line);
+            DeleteTree(root);
+            return NULL;
+        }
+        CommaFlag = 1;
+        p->son[1] = FormPara();
+        if(p->son[1] == NULL) {
+            DeleteTree(root);
+            return NULL;
+        }
+    } else {
+        CommaFlag = 0;
+        printf("Not a Key Word on line: %d\n",w.pre_line);
+        DeleteTree(root);
+        return NULL;
     }
+    return root;
+}
+
+//复合语句
+struct TreeNode* Compound() {
+    struct TreeNode* p = NewTreeNode();
+    w = GetToken(token_list);
+    if(w.kind == 5) {           // const 常量
+        ConstType = 1;
+        w = GetToken(token_list);
+    }
+    // 4: char / 10: double / 14: float / 20: int / 21: long / 24 short
+    if(w.kind == 4 || w.kind == 10 || w.kind == 14 || w.kind == 20 || w.kind == 21 || w.kind == 24) {
+        KeyType = w.kind;
+        p->son[0] = LocalVar();
+    } else {
+        p->son[0] = NULL;
+    }
+    // 调用语句序列
+    p->son[1] = SentenList();
+    if(p->son[1] == NULL) {
+        DeleteTree(p);
+        return NULL;
+    }
+    if(w.kind != RBP) {
+        printf("Invalid Syntax on line: %d\n",w.pre_line);
+        DeleteTree(p);
+        return NULL;
+    }
+    w = GetToken(token_list);
+    return p;
+}
+
+// 局部变量定义
+struct TreeNode* LocalVar() {
+    struct TreeNode* p = NewTreeNode();
+    p->son[0] = NewTreeNode();
+    p->son[0]->son[0] = NewTreeNode();
+    strcat(p->son[0]->son[0]->token, key_name[KeyType]);
+    if(ConstType) {
+        ConstType = 0;
+    }
+    w = GetToken(token_list);
+    if(w.kind != IDENT) {
+        printf("Not a Identifier on line: %d\n",w.pre_line);
+        DeleteTree(p);
+        return NULL;
+    }
+    p->son[0]->son[1] = NewTreeNode();
+    strcat(p->son[0]->son[1]->token, w.text);
+    w = GetToken(token_list);
+    int flag = 0;
+    if(w.kind == ASSIGN) {                  // 赋值语句 int i = 1;
+        w = GetToken(token_list);
+        struct TreeNode* q = Sentence();
+        if(q == NULL)
+            return NULL;
+        flag = 1;
+    }
+    if(w.kind == LK) {                      // 定义数组 int a[1];
+        w = GetToken(token_list);
+        if(w.kind != INT_CONST) {
+            printf("Expected Integer in [] on line: %d\n",w.pre_line);
+            return NULL;
+        }
+        int size = ToInt(w.text);
+        w = GetToken(token_list);
+        if(w.kind != RK) {
+            printf("Expected \']\' after \'[\' on line: %d\n",w.pre_line);
+            DeleteTree(p);
+            return NULL;
+        }
+        w = GetToken(token_list);
+    }
+    if(!flag && w.kind != SEMI && w.kind != COMMA) {
+        printf("Expected \',\' or \';\' on line: %d\n",w.pre_line);
+        DeleteTree(p);
+        return NULL;
+    }
+    if(flag || w.kind == SEMI) {
+        if(!flag)
+            w = GetToken(token_list);
+        return p;
+    }
+    // 递归调用局部变量函数
+    p->son[1] = LocalVar();
+    if(p->son[1] == NULL) {
+        DeleteTree(p);
+        return NULL;
+    }
+    return p;
+}
+
+// 语句序列
+struct TreeNode* SentenList() {
+    struct TreeNode* p = Sentence();
+    if(p == NULL) {
+        if(error_count > 0) {
+            printf("Invalid Syntax on line: %d\n",w.pre_line);
+            DeleteTree(p);
+            return NULL;
+        } else {
+            return p;
+        }
+    } else {
+        struct TreeNode* q = NewTreeNode();
+        q->son[0] = p;
+        q->son[1] = SentenList();
+        if(q->son[1] == NULL && error_count > 0) {
+            DeleteTree(q);
+            return NULL;
+        } else {
+            return q;
+        }
+    }
+}
+
+// 语句分析
+struct TreeNode* Sentence() {
+    return NULL;
+}
+
+// 表达式分析
+struct TreeNode* Expression(int end) {
     return NULL;
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H
