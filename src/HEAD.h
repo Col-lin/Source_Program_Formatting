@@ -74,6 +74,15 @@ enum token_kind {
     RK, PRE, LANNO, LBA, RBA, DOT, eof
 };
 
+enum key_word {
+    AUTO = 1, BREAK, CASE, CHAR, CONST, CONTINUE,
+    DEFAULT, DEFINE, DO, DOUBLE, ELSE, ENUM,
+    EXTERN, FLOAT, FOR, GOTO, IF, INCLUDE,
+    INLINE, INT, LONG, REGISTER, RETURN, SHORT,
+    SIGNED, SIZEOF, STATIC, STRUCT, SWITCH, TYPEDEF,
+    UNION, UNSIGNED, VOID, VOLATILE, WHILE
+};
+
 int error_count = 0;
 
 struct TreeNode{

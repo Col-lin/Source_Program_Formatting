@@ -79,11 +79,11 @@ struct TreeNode* ExtDef() {
     //处理预编译部分
     while(w.kind == PRE) {          // #
         w = GetToken(token_list);
-        if(w.kind != 8 && w.kind != 18) {    //8:define 18:include
+        if(w.kind != DEFINE && w.kind != INCLUDE) {
             printf("Precompiled Error on line: %d\n", w.pre_line);
             return NULL;
         }
-        if(w.kind == 8) {           // define
+        if(w.kind == DEFINE) {      // define
             w = GetToken(token_list);
             if(w.kind != IDENT) {
                 printf("Not a Identifier on line: %d\n",w.pre_line);
@@ -437,8 +437,7 @@ struct TreeNode* Compound() {
         ConstType = 1;
         w = GetToken(token_list);
     }
-    // 4: char / 10: double / 14: float / 20: int / 21: long / 24 short
-    if(w.kind == 4 || w.kind == 10 || w.kind == 14 || w.kind == 20 || w.kind == 21 || w.kind == 24) {
+    if(w.kind == CHAR || w.kind == INT || w.kind == FLOAT || w.kind == SHORT || w.kind == DOUBLE || w.kind == LONG) {
         KeyType = w.kind;
         p->son[0] = LocalVar();
     } else {
@@ -545,6 +544,122 @@ struct TreeNode* SentenList() {
 
 // 语句分析
 struct TreeNode* Sentence() {
+    struct TreeNode* root = NULL;
+    struct TreeNode* p = NULL;
+    struct TreeNode* q = NULL;
+    struct TreeNode* r = NULL;
+    struct TreeNode* s = NULL;
+    switch (w.kind) {
+        case IF:
+            w = GetToken(token_list);
+            if(w.kind != LP) {
+                printf("Invalid Syntax on line: %d\n", w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            p = Expression(RP);         // 条件表达式
+            if(p == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            q = Sentence();
+            if(q == NULL) {
+                return NULL;
+            }
+            if(w.kind == ELSE) {
+                w = GetToken(token_list);
+                r = Sentence();
+                root = NewTreeNode();
+                root->son[0] = p;
+                root->son[1] = q;
+                root->son[2] = r;
+                return root;
+            } else {
+                root = NewTreeNode();
+                root->son[0] = p;
+                root->son[1] = q;
+                return root;
+            }
+        case LBP:               // {
+            return Compound();
+        case WHILE:
+            w = GetToken(token_list);
+            if(w.kind != LP) {
+                printf("Invalid Syntax on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            p = Expression(RP);         // 条件表达式
+            if(p == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            q = Sentence();
+            if(q == NULL) {
+                return NULL;
+            }
+            root = NewTreeNode();
+            root->son[0] = p;
+            root->son[1] = q;
+            return root;
+        case FOR:
+            w = GetToken(token_list);
+            if(w.kind != LP) {
+                printf("Invalid Syntax on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            p = Expression(SEMI);           // 初始赋值表达式
+            if(p == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            q = Expression(SEMI);           // 条件表达式
+            if(q == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            r = Expression(RP);               // 循环后表达式
+            if(r == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            s = Sentence();                     //for子句
+            if(s == NULL) {
+                return NULL;
+            }
+            root = NewTreeNode();
+            root->son[0] = p;
+            root->son[1] = q;
+            root->son[2] = r;
+            root->son[3] = s;
+            return root;
+        case RETURN:
+            w = GetToken(token_list);
+            p = Expression(SEMI);
+            if(p == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            root = NewTreeNode();
+            root->son[0] = p;
+            w = GetToken(token_list);
+            return root;
+        case BREAK:
+            w = GetToken(token_list);
+            if(w.kind != SEMI) {
+                printf("Expected \';\' on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            root = NewTreeNode();
+            w = GetToken(token_list);
+            return root;
+    }
     return NULL;
 }
 
