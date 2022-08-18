@@ -235,7 +235,7 @@ struct TreeNode* ExtDef() {
     // 调用函数定义
     else
         p->son[0] = FuncDef();
-    if(p->son != NULL)
+    if(p->son[0] != NULL)
         return p;
     DeleteTree(p);
         return NULL;

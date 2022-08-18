@@ -58,7 +58,7 @@ FILE *fil;
 	RK: ]
 	PRE: #
 	LANNO: //
-	LBA: /*
+	LBA: / *
     RBA: * /
 	DOT: .
     eof: end of file
@@ -73,6 +73,15 @@ enum token_kind {
     LESSEQ, NOT, SEMI, COMMA, LBP, RBP, LK,
     RK, PRE, LANNO, LBA, RBA, DOT, eof
 };
+
+char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
+                         "FLOAT_CONST", "DOUBLE_CONST", "LONG_CONST",
+                         "STRING_CONST", "PLUS", "MINUS", "MULTIPLY",
+                         "DIVIDE", "LP", "RP", "ASSIGN", "MORE", "LESS",
+                         "EQUAL", "NOTEQ", "AND", "OR", "PLUSPLUS",
+                         "MINUSMINUS", "MOD", "MOREEQ", "LESSEQ", "NOT",
+                         "SEMI", "COMMA", "LBP", "RBP", "LK", "RK", "PRE",
+                         "LANNO", "LBA", "RBA", "DOT"};
 
 enum key_word {
     AUTO = 1, BREAK, CASE, CHAR, CONST, CONTINUE,

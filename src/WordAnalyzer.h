@@ -16,7 +16,7 @@ int cnt_rbp = 0;    //count }
 int cnt_lba = 0;    //count /*
 int cnt_rba = 0;    //count */
 
-BOOL isalpha(char c) {
+BOOL IsAlpha(char c) {
     if(c >= 'a' && c <= 'z')
         return TRUE;
     if(c >= 'A' && c <= 'Z')
@@ -24,21 +24,11 @@ BOOL isalpha(char c) {
     return FALSE;
 }
 
-BOOL isnumber(char c) {
+BOOL IsNumber(char c) {
     if(c >= '0' && c <= '9')
         return TRUE;
     return FALSE;
 }
-
-char kind_name[38][13] ={"ERROR_TOKEN", "IDENT", "CHAR_CONST", "INT_CONST",
-                            "FLOAT_CONST", "DOUBLE_CONST", "LONG_CONST",
-                            "STRING_CONST", "PLUS", "MINUS", "MULTIPLY",
-                            "DIVIDE", "LP", "RP", "ASSIGN", "MORE", "LESS",
-                            "EQUAL", "NOTEQ", "AND", "OR", "PLUSPLUS",
-                            "MINUSMINUS", "MOD", "MOREEQ", "LESSEQ", "NOT",
-                            "SEMI", "COMMA", "LBP", "RBP", "LK", "RK", "PRE",
-                            "LANNO", "LBA", "RBA", "DOT"};
-
 
 void AnalysisCompleted(struct WORD w) {
     static int last_line = 0;
@@ -78,9 +68,9 @@ SITUATION WordAnalysis(FILE *fp) {
         }
         w.line = line_count;    //line of the word
         w.text = strcat(w.text, c);
-        if(isalpha(*c) == TRUE) {    //IDENT or KEY
+        if(IsAlpha(*c) == TRUE) {    //IDENT or KEY
             *c = getc(fp);
-            while(*c == '_' || isalpha(*c) || isnumber(*c)) {
+            while(*c == '_' || IsAlpha(*c) || IsNumber(*c)) {
                 strcat(w.text, c);
                 *c = getc(fp);
             }
@@ -89,9 +79,9 @@ SITUATION WordAnalysis(FILE *fp) {
             if(type == UNMATCHED)
                 w.kind = IDENT;
             else w.kind = type;
-        } else if(isnumber(*c) == TRUE) {   //const number
+        } else if(IsNumber(*c) == TRUE) {   //const number
             *c = getc(fp);
-            if(isalpha(*c) && *c != 'x' && *c !='X') {
+            if(IsAlpha(*c) && *c != 'x' && *c !='X') {
                 strcat(w.text, c);
                 w.kind = ERROR_TOKEN;
                 error_count++;
@@ -100,11 +90,11 @@ SITUATION WordAnalysis(FILE *fp) {
                 continue;
             }
             int flag = 0, hexflag = 0;
-            while(*c == '.' || isnumber(*c) || *c == 'x' || *c == 'X') {
+            while(*c == '.' || IsNumber(*c) || *c == 'x' || *c == 'X') {
                 if(*c == '.' && flag == 0) { //'.' should be counted less then once
                     strcat(w.text, c);
                     flag = 1;
-                } else if(isnumber(*c)) {
+                } else if(IsNumber(*c)) {
                     strcat(w.text, c);
                 } else if(*w.text == '0' && (*c == 'x' || *c == 'X') && hexflag == 0) {
                     strcat(w.text, c);
