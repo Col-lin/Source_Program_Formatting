@@ -659,6 +659,52 @@ struct TreeNode* Sentence() {
             root = NewTreeNode();
             w = GetToken(token_list);
             return root;
+        case CONTINUE:
+            w = GetToken(token_list);
+            if(w.kind != SEMI) {
+                printf("Expected \';\' on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            root = NewTreeNode();
+            w = GetToken(token_list);
+            return root;
+        case DO:                            // do while
+            w = GetToken(token_list);
+            p = Sentence();
+            if(p == NULL) {
+                return NULL;
+            }
+            if(w.kind != WHILE) {
+                printf("Expected \"while\" on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            w = GetToken(token_list);
+            q = Sentence();
+            if(q == NULL) {
+                return NULL;
+            }
+            w = GetToken(token_list);
+            if(w.kind != SEMI) {
+                printf("Expected \';\' on line: %d\n",w.pre_line);
+                return NULL;                
+            }
+            root = NewTreeNode();
+            root->son[0] = p;
+            root->son[1] = q;
+            w = GetToken(token_list);
+            return root;
+        case LP:
+            w = GetToken(token_list);
+            p = Expression(RP);
+            if(p == NULL) {
+                printf("Wrong Expression on line: %d\n",w.pre_line);
+                return NULL;
+            }
+            root = NewTreeNode();
+            root->son[0] = p;
+            return root;
+        case PLUSPLUS:
+        case MINUSMINUS:
     }
     return NULL;
 }
