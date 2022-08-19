@@ -7,6 +7,7 @@
 
 #include "HEAD.h"
 #include "WordAnalyzer.h"
+#include "Stack.h"
 #include "AST.h"
 
 struct WORD w;
@@ -549,6 +550,8 @@ struct TreeNode* Sentence() {
     struct TreeNode* q = NULL;
     struct TreeNode* r = NULL;
     struct TreeNode* s = NULL;
+    char* str = NULL;
+    char* c = NULL;
     switch (w.kind) {
         case IF:
             w = GetToken(token_list);
@@ -705,12 +708,158 @@ struct TreeNode* Sentence() {
             return root;
         case PLUSPLUS:
         case MINUSMINUS:
+        case CHAR_CONST:
+        case INT_CONST:
+        case FLOAT_CONST:
+        case DOUBLE_CONST:
+        case LONG_CONST:
+        case STRING_CONST:
+        case IDENT:
+            if(Find(func, w.text) == MATCHED) {
+                w = GetToken(token_list);
+                if(w.kind != LP) {
+                    printf("Expected \'(\' on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+                while(w.kind != RP) {
+                    w = GetToken(token_list);
+                    if(w.kind != IDENT) {
+                        printf("Not a Identifier on line: %d\n",w.pre_line);
+                        return NULL;
+                    }
+                    w = GetToken(token_list);
+                    if(w.kind != RP && w.kind != COMMA) {
+                        printf("Wrong Syntax on line: %d\n",w.pre_line);
+                        return NULL;
+                    }
+                }
+                w = GetToken(token_list);
+                if(w.kind != SEMI) {
+                    printf("Expected \';\' on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+                root = NewTreeNode();
+                w = GetToken(token_list);
+                return root;
+            }
+            p = Expression(SEMI);
+            if(p == NULL) {
+                printf("Wrong Expression on line: %d]\n",w.pre_line);
+                return NULL;
+            }
+            root = NewTreeNode();
+            root->son[0] = p;
+            w = GetToken(token_list);
+            return root;
+        case INT:
+        case SHORT:
+        case LONG:
+        case CHAR:
+        case DOUBLE:
+        case FLOAT:
+        case CONST:
+            if(w.kind == CONST) {
+                w = GetToken(token_list);
+                if(w.kind != INT && w.kind != SHORT && w.kind != LONG
+                && w.kind != CHAR && w.kind != DOUBLE && w.kind != FLOAT) {
+                    printf("Wrong Syntax on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+            }
+            root = LocalVar();
+            return root;
+        case PRE:
+            w = GetToken(token_list);
+            if(w.kind != DEFINE && w.kind != INCLUDE) {
+                printf("Precompiled Error on line: %d\n", w.pre_line);
+                return NULL;
+            }
+            if(w.kind == DEFINE) {      // define
+                w = GetToken(token_list);
+                if(w.kind != IDENT) {
+                    printf("Not a Identifier on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+                w = GetToken(token_list);
+                if(w.kind != INT_CONST && w.kind != DOUBLE_CONST) {
+                    printf("Precomplied Error on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+                root = NewTreeNode();
+                w = GetToken(token_list);
+                return root;
+            } else {                // include
+                w = GetToken(token_list);
+                if(w.kind != LESS){
+                    printf("Precomplied Error on line: %d\n",w.pre_line);
+                    return NULL;
+                }
+                str = (char*) calloc(32,sizeof (char));
+                w = GetToken(token_list);       //文件名
+                strcat(str, w.text);
+                w = GetToken(token_list);       // .
+                strcat(str, w.text);
+                if(w.kind != DOT) {
+                    printf("Precomplied Error on line: %d\n",w.pre_line);
+                    free(str);
+                    return NULL;
+                }
+                w = GetToken(token_list);       //拓展名
+                strcat(str, w.text);
+                w = GetToken(token_list);
+                if(w.kind != MORE) {
+                    printf("Precomplied Error on line: %d\n",w.pre_line);
+                    free(str);
+                    return NULL;
+                }
+                root = NewTreeNode();
+                w = GetToken(token_list);
+                return root;
+            }
+        case LANNO:
+            str = (char*) calloc(100,sizeof (char));
+            c = (char*) calloc(2,sizeof (char));
+            *c = ' ';
+            int l = w.line;
+            w = GetToken(token_list);
+            while(w.line == l) {
+                strcat(str, w.text);
+                strcat(str, c);
+                w = GetToken(token_list);
+            }
+            free(c);
+            free(str);
+            root = NewTreeNode();
+            return root;
+        case LBA:
+            str = (char*) calloc(1000,sizeof (char));
+            c = (char*) calloc(2,sizeof (char));
+            char *n = (char*) calloc(2,sizeof (char));
+            *c = ' ';
+            *n = '\n';
+            w = GetToken(token_list);
+            while(w.kind != RBA) {
+                if(w.pre_line < w.line)
+                    strcat(str, n);
+                strcat(str, w.text);
+                strcat(str, c);
+                w = GetToken(token_list);
+            }
+            free(str);
+            free(c);
+            free(n);
+            root = NewTreeNode();
+            return root;
+        default:
+            error_count++;
+            printf("Wrong Syntax on line: %d\n",w.pre_line);
+            return NULL;
     }
-    return NULL;
 }
 
 // 表达式分析
 struct TreeNode* Expression(int end) {
+
     return NULL;
 }
 #endif //SOURCE_PROGRAM_FORMATTING_SYNTAXANALYZER_H

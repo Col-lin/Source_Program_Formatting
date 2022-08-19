@@ -284,6 +284,10 @@ SITUATION WordAnalysis(FILE *fp) {
                     do {
                         *c = getc(fp);
                         strcat(w.text, c);
+                        if(*c == EOF) {
+                            error_count++;
+                            break;
+                        }
                     } while(*c != '\"');
                     w.kind = STRING_CONST;
                     break;

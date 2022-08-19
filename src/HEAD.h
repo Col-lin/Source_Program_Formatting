@@ -130,6 +130,12 @@ struct List{
     struct Node* last_read;
 };
 
+struct Stack{
+    struct Node* next;
+    int size;
+    struct Node* top;
+};
+
 struct List *token_list;
 
 struct TreeNode* Program();
